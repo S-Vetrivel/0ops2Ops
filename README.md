@@ -1,2 +1,2 @@
 # 0ops2Ops
-# 0ops2Ops
+Oops2Ops is a developer-friendly DevSecOps pipeline designed to turn everyday development “oops” moments into secure, production-ready deployments. Built for self-hosted infrastructure, Oops2Ops integrates security checks at every stage of the CI/CD lifecycle—from code commit to production—without slowing developers down. The project focuses on practical security, automation, and visibility, ensuring that vulnerabilities, misconfigurations, and insecure builds are caught early, long before they reach production.
