@@ -17,18 +17,29 @@ func SetupRoutes(r *gin.Engine) {
 			auth.POST("/login", controllers.Login)
 			auth.GET("/logout", controllers.Logout)
 			auth.GET("/me", middleware.Protect(), controllers.Me)
-            auth.POST("/reset-password", controllers.ResetPassword)
-			
+			auth.POST("/reset-password", controllers.ResetPassword)
+			// Google Auth
 			auth.GET("/google", controllers.GoogleLogin)
 			auth.GET("/google/callback", controllers.GoogleCallback)
-			auth.POST("/google/onetap", controllers.GoogleOneTap)
+			auth.POST("/google/one-tap", controllers.GoogleOneTap)
+
+			// GitHub Auth
+			auth.GET("/github", controllers.GitHubLogin)
+			auth.GET("/github/callback", controllers.GitHubCallback)
 		}
 
 		// Profile RoutesMatches /api/profile
-		profile := api.Group("/profile")
+		// profile := api.Group("/profile") // Profile routes are now part of the protected group
+		// {
+		// 	profile.PUT("/info", middleware.Protect(), controllers.PersonalInfo) // Moved to protected group
+		// 	profile.POST("/profile-image", middleware.Protect(), controllers.UploadProfilePicture) // Moved to protected group
+		// }
+
+		protected := api.Group("") // This group will inherit the /api prefix
+		protected.Use(middleware.Protect())
 		{
-			profile.PUT("/info", middleware.Protect(), controllers.PersonalInfo)
-			profile.POST("/profile-image", middleware.Protect(), controllers.UploadProfilePicture)
+			// Profile routes moved to protected group
+			protected.PUT("/profile/info", controllers.PersonalInfo)
 		}
 	}
 }
