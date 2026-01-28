@@ -1,0 +1,5 @@
+# SPA fallback (required for React Router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
