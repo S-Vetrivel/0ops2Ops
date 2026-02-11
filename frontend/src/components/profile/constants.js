@@ -11,6 +11,27 @@ export const PROFILE_TABS = [
     showForUser: true,
     showForAdmin: true,
   },
+  {
+    id: "orders",
+    label: "My Orders",
+    icon: Package,
+    showForUser: true,
+    showForAdmin: true,
+  },
+  {
+    id: "wishlist",
+    label: "Wishlist",
+    icon: Heart,
+    showForUser: true,
+    showForAdmin: true,
+  },
+  {
+    id: "addresses",
+    label: "My Addresses",
+    icon: MapPin,
+    showForUser: true,
+    showForAdmin: true,
+  },
 ];
 // --- MOCK DATA ---
 export const MOCK_USER_META = {

@@ -40,6 +40,7 @@ func SetupRoutes(r *gin.Engine) {
 		{
 			// Profile routes moved to protected group
 			protected.PUT("/profile/info", controllers.PersonalInfo)
+			protected.POST("/profile/profile-image", controllers.UploadProfilePicture)
 		}
 	}
 }

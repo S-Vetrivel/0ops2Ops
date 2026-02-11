@@ -13,6 +13,9 @@ import ProfileSidebar from "../components/profile/ProfileSidebar";
 
 // Import Tabs
 import PersonalInfoTab from "../components/profile/tabs/PersonalInfoTab";
+import OrdersTab from "../components/profile/tabs/OrdersTab";
+import WishlistTab from "../components/profile/tabs/WishlistTab";
+import AddressesTab from "../components/profile/tabs/AddressesTab";
 
 // Import Constants
 import { PROFILE_TABS } from "../components/profile/constants";
@@ -20,6 +23,9 @@ import { PROFILE_TABS } from "../components/profile/constants";
 // Map IDs to Component Objects
 const TAB_COMPONENTS = {
   personal: PersonalInfoTab,
+  orders: OrdersTab,
+  wishlist: WishlistTab,
+  addresses: AddressesTab,
 };
 
 export default function Profile() {

@@ -1,0 +1,82 @@
+2026/01/28 12:46:39 ☑️  Connected to MongoDB
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] POST   /api/auth/signup          --> backend/internal/controllers.Signup (4 handlers)
+[GIN-debug] POST   /api/auth/login           --> backend/internal/controllers.Login (4 handlers)
+[GIN-debug] GET    /api/auth/logout          --> backend/internal/controllers.Logout (4 handlers)
+[GIN-debug] GET    /api/auth/me              --> backend/internal/controllers.Me (5 handlers)
+[GIN-debug] POST   /api/auth/reset-password  --> backend/internal/controllers.ResetPassword (4 handlers)
+[GIN-debug] GET    /api/auth/google          --> backend/internal/controllers.GoogleLogin (4 handlers)
+[GIN-debug] GET    /api/auth/google/callback --> backend/internal/controllers.GoogleCallback (4 handlers)
+[GIN-debug] POST   /api/auth/google/one-tap  --> backend/internal/controllers.GoogleOneTap (4 handlers)
+[GIN-debug] GET    /api/auth/github          --> backend/internal/controllers.GitHubLogin (4 handlers)
+[GIN-debug] GET    /api/auth/github/callback --> backend/internal/controllers.GitHubCallback (4 handlers)
+[GIN-debug] PUT    /api/profile/info         --> backend/internal/controllers.PersonalInfo (5 handlers)
+2026/01/28 12:46:39 ☑️  Go server running on http://127.0.0.1:3000
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :3000
+[GIN] 2026/01/28 - 12:46:43 | 404 |      18.827µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:46:48 | 404 |       6.288µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:46:53 | 404 |       7.919µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:46:58 | 404 |       7.604µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:03 | 404 |       7.944µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:08 | 404 |       10.35µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:13 | 404 |       6.457µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:18 | 404 |       7.924µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:23 | 404 |       9.019µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:28 | 404 |       8.444µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:33 | 404 |        7.93µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:38 | 404 |       6.198µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:43 | 404 |       6.152µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:48 | 404 |       6.668µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:53 | 404 |        8.41µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:47:58 | 404 |        8.17µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:03 | 404 |        9.13µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:08 | 404 |       7.921µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:13 | 404 |       7.923µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:18 | 404 |       8.015µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:23 | 404 |        7.86µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:28 | 404 |       6.027µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:33 | 404 |       5.867µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:38 | 404 |       8.269µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:43 | 404 |       6.037µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:48 | 404 |       6.335µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:53 | 404 |       6.093µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:48:58 | 404 |        9.77µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:03 | 404 |       5.941µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:08 | 404 |       9.964µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:13 | 404 |       6.113µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:18 | 404 |       6.327µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:23 | 404 |       9.865µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:28 | 404 |       5.972µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:33 | 404 |       7.938µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:38 | 404 |       8.009µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:43 | 404 |       7.825µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:48 | 404 |       8.295µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:53 | 404 |       5.911µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:49:58 | 404 |       7.802µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:03 | 404 |       5.449µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:08 | 404 |       7.942µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:13 | 404 |       7.763µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:18 | 404 |       8.712µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:23 | 404 |       9.631µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:28 | 404 |       7.966µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:32 | 304 |     536.053µs |             ::1 | GET      "/uploads/profile-1769579929-1769579929275480463.jpg"
+[GIN] 2026/01/28 - 12:50:32 | 200 |     992.464µs |             ::1 | GET      "/api/auth/me"
+[GIN] 2026/01/28 - 12:50:34 | 404 |       8.314µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:36 | 404 |       10.53µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:41 | 404 |       9.337µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:46 | 404 |       9.338µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:50:53 | 200 |     583.923µs |             ::1 | GET      "/api/auth/me"
+[GIN] 2026/01/28 - 12:50:59 | 200 |     737.894µs |             ::1 | GET      "/api/auth/me"
+[GIN] 2026/01/28 - 12:51:37 | 200 |    1.404087ms |             ::1 | GET      "/api/auth/me"
+[GIN] 2026/01/28 - 12:51:40 | 404 |      11.129µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:51:45 | 404 |       6.521µs |             ::1 | GET      "/api/services"
+[GIN] 2026/01/28 - 12:51:57 | 200 |    1.037217ms |             ::1 | GET      "/api/auth/me"
