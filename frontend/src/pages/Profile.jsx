@@ -16,6 +16,7 @@ import PersonalInfoTab from "../components/profile/tabs/PersonalInfoTab";
 import OrdersTab from "../components/profile/tabs/OrdersTab";
 import WishlistTab from "../components/profile/tabs/WishlistTab";
 import AddressesTab from "../components/profile/tabs/AddressesTab";
+import ReposTab from "../components/profile/tabs/ReposTab";
 
 // Import Constants
 import { PROFILE_TABS } from "../components/profile/constants";
@@ -26,6 +27,7 @@ const TAB_COMPONENTS = {
   orders: OrdersTab,
   wishlist: WishlistTab,
   addresses: AddressesTab,
+  repos: ReposTab,
 };
 
 export default function Profile() {

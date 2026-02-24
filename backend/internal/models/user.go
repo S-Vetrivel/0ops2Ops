@@ -8,8 +8,9 @@ import (
 
 type User struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
-	GoogleId       string             `bson:"googleId,omitempty" json:"googleId,omitempty"`
-	Username       string             `bson:"username" json:"username"`
+	GoogleId          string             `bson:"googleId,omitempty" json:"googleId,omitempty"`
+	GitHubAccessToken string             `bson:"githubAccessToken,omitempty" json:"-"` // Store token, don't return so easily
+	Username          string             `bson:"username" json:"username"`
 	Fullname       string             `bson:"fullname" json:"fullname"`
 	Age            int                `bson:"age,omitempty" json:"age,omitempty"`
 	Gender         string             `bson:"gender,omitempty" json:"gender,omitempty"`

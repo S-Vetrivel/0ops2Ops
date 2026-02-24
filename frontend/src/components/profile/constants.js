@@ -32,6 +32,20 @@ export const PROFILE_TABS = [
     showForUser: true,
     showForAdmin: true,
   },
+  {
+    id: "addresses",
+    label: "My Addresses",
+    icon: MapPin,
+    showForUser: true,
+    showForAdmin: true,
+  },
+  {
+    id: "repos",
+    label: "Repositories",
+    icon: GalleryHorizontal,
+    showForUser: true,
+    showForAdmin: true,
+  },
 ];
 // --- MOCK DATA ---
 export const MOCK_USER_META = {

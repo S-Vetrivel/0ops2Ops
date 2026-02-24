@@ -28,7 +28,7 @@ func initGitHubConfig() {
 			RedirectURL:  os.Getenv("GITHUB_CALLBACK_URL"),
 			ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 			ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-			Scopes:       []string{"user:email", "read:user"},
+			Scopes:       []string{"user:email", "read:user", "repo"},
 			Endpoint:     github.Endpoint,
 		}
 
@@ -44,7 +44,7 @@ func initGitHubConfig() {
 }
 
 // Helper to find or create user from GitHub
-func findOrCreateGitHubUser(ctx context.Context, userInfo map[string]interface{}) (*models.User, error) {
+func findOrCreateGitHubUser(ctx context.Context, userInfo map[string]interface{}, accessToken string) (*models.User, error) {
 	// GitHub might return "email" as null if private, so we might need to fetch emails separately
 	// For simplicity, we assume we get the primary email or use ID as fallback for finding
 
@@ -69,6 +69,11 @@ func findOrCreateGitHubUser(ctx context.Context, userInfo map[string]interface{}
 	// Try finding by Email first
 	err := config.DB.Collection("users").FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err == nil {
+		// Update access token if user exists
+		if accessToken != "" {
+			update := bson.M{"$set": bson.M{"githubAccessToken": accessToken}}
+			_, _ = config.DB.Collection("users").UpdateOne(ctx, bson.M{"_id": user.ID}, update)
+		}
 		return &user, nil
 	}
 
@@ -95,8 +100,9 @@ func findOrCreateGitHubUser(ctx context.Context, userInfo map[string]interface{}
 	newUser := models.User{
 		ID:       primitive.NewObjectID(),
 		Username: username,
-		Fullname: name,
-		Email:    email,
+		Fullname:          name,
+		Email:             email,
+		GitHubAccessToken: accessToken,
 		// Store GitHub specific ID if we updated the model, but currently we rely on email.
 		// Ideally we should add 'GithubId' to model.
 		ProfilePicture: picture,
@@ -162,7 +168,7 @@ func GitHubCallback(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := findOrCreateGitHubUser(ctx, userInfo)
+	user, err := findOrCreateGitHubUser(ctx, userInfo, token.AccessToken)
 	if err != nil {
 		log.Println("Error creating github user:", err)
 		c.Redirect(http.StatusTemporaryRedirect, os.Getenv("CLIENT_URL")+"/login?error=db_error")
