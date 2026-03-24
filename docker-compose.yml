@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: mongo:latest
+    container_name: 0ops2Ops_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: 0ops2Ops_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://db:27017/O2O
+      - CLIENT_URL=http://localhost
+    depends_on:
+      - db
+    volumes:
+      - backend_uploads:/root/public/uploads
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: 0ops2Ops_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  mongo_data:
+  backend_uploads:

@@ -24,9 +24,6 @@ import { PROFILE_TABS } from "../components/profile/constants";
 // Map IDs to Component Objects
 const TAB_COMPONENTS = {
   personal: PersonalInfoTab,
-  orders: OrdersTab,
-  wishlist: WishlistTab,
-  addresses: AddressesTab,
   repos: ReposTab,
 };
 

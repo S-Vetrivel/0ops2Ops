@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -81,7 +80,7 @@ func (s *DeploymentService) GenerateDockerfile(path, language string) error {
 	dockerfilePath := filepath.Join(path, "Dockerfile")
 	// If Dockerfile exists, skip
 	if _, err := os.Stat(dockerfilePath); err == nil {
-		return nil 
+		return nil
 	}
 
 	var content string
@@ -143,7 +142,7 @@ func (s *DeploymentService) BuildImage(ctx context.Context, path, imageName stri
 
 	// Consume output to wait for build to finish
 	// In a real app, we might want to stream this to the user
-	_, err = io.Copy(os.Stdout, res.Body) 
+	_, err = io.Copy(os.Stdout, res.Body)
 	return err
 }
 
@@ -212,7 +211,7 @@ func archiveDir(src string) (io.Reader, error) {
 		if err != nil {
 			return err
 		}
-		
+
 		// Fix windows paths for tar
 		header.Name = filepath.ToSlash(rel)
 
