@@ -4,14 +4,15 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+	"bufio"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -75,54 +76,98 @@ func (s *DeploymentService) DetectLanguage(path string) (string, error) {
 	return "", fmt.Errorf("unknown language")
 }
 
-// GenerateDockerfile creates a Dockerfile based on the detected language
-func (s *DeploymentService) GenerateDockerfile(path, language string) error {
+// GenerateDockerfile creates a Dockerfile based on the detected language or falls back to AI.
+func (s *DeploymentService) GenerateDockerfile(path, language, model, previousError string, outStream io.Writer) error {
 	dockerfilePath := filepath.Join(path, "Dockerfile")
-	// If Dockerfile exists, skip
-	if _, err := os.Stat(dockerfilePath); err == nil {
-		return nil
-	}
+	
+	// If it's a completely fresh start with no errors and a known language, try static mapping
+	if previousError == "" {
+		if _, err := os.Stat(dockerfilePath); err == nil {
+			if outStream != nil { outStream.Write([]byte("> Dockerfile already exists, skipping.\n")) }
+			return nil
+		}
 
-	var content string
-	switch language {
-	case "node":
-		content = `FROM node:18-alpine
+		var content string
+		switch language {
+		case "node":
+			content = `FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]`
-	case "python":
-		content = `FROM python:3.9-slim
+		case "python":
+			content = `FROM python:3.9-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 5000
 CMD ["python", "app.py"]`
-	case "go":
-		content = `FROM golang:1.21-alpine
+		case "go":
+			content = `FROM golang:1.21-alpine
 WORKDIR /app
 COPY . .
 RUN go mod download
 RUN go build -o main .
 EXPOSE 8080
 CMD ["./main"]`
-	case "static":
-		content = `FROM nginx:alpine
+		case "static":
+			content = `FROM nginx:alpine
 COPY . /usr/share/nginx/html
 EXPOSE 80`
-	default:
-		return fmt.Errorf("unsupported language for auto-dockerfile: %s", language)
+		}
+
+		if content != "" {
+			return os.WriteFile(dockerfilePath, []byte(content), 0644)
+		}
 	}
 
+	// Unknown language OR explicit Retry -> Run an AI fallback execution
+	if previousError != "" {
+		if outStream != nil { outStream.Write([]byte(fmt.Sprintf("> Orchestrating self-healing AI pipeline via %s...\n", model))) }
+	} else {
+		if outStream != nil { outStream.Write([]byte(fmt.Sprintf("> Language detection failed, orchestrating AI generation via %s...\n", model))) }
+	}
+
+	var fileListBuilder strings.Builder
+	filepath.Walk(path, func(f string, fi os.FileInfo, e error) error {
+		if e != nil || fi.IsDir() || strings.Contains(f, ".git") || strings.Contains(f, "node_modules") {
+			return nil
+		}
+		rel, _ := filepath.Rel(path, f)
+		fileListBuilder.WriteString(rel + "\n")
+		return nil
+	})
+	
+	if outStream != nil { outStream.Write([]byte("> Contacting local Ollama Agent...\n")) }
+	ollama := NewOllamaService()
+	aiDockerfile, err := ollama.GenerateDockerfile(fileListBuilder.String(), model, previousError)
+	if err != nil || len(aiDockerfile) < 10 {
+		if outStream != nil { outStream.Write([]byte(fmt.Sprintf("> AI Agent (%s) failed: %v\n", model, err))) }
+		return fmt.Errorf("ai %s generation failed: %v", model, err)
+	}
+	
+	if outStream != nil { 
+		outStream.Write([]byte(fmt.Sprintf("> 🪄 Generated AI Dockerfile via %s:\n", model))) 
+		outStream.Write([]byte(aiDockerfile + "\n\n"))
+	}
+
+	return os.WriteFile(dockerfilePath, []byte(aiDockerfile), 0644)
+}
+
+// GenerateEmptyDockerfile forcefully clears any existing Dockerfile and makes a generic alpine container
+func (s *DeploymentService) GenerateEmptyDockerfile(path string) error {
+	dockerfilePath := filepath.Join(path, "Dockerfile")
+	content := `FROM alpine:latest
+CMD ["sleep", "infinity"]`
 	return os.WriteFile(dockerfilePath, []byte(content), 0644)
 }
 
 // BuildImage builds the Docker image
-func (s *DeploymentService) BuildImage(ctx context.Context, path, imageName string) error {
-	// Create a tarball of the context
+// BuildImage builds the Docker image and writes the JSON build stream to the given writer
+func (s *DeploymentService) BuildImage(ctx context.Context, path, imageName string, outStream io.Writer) error {
 	tarCtx, err := archiveDir(path)
 	if err != nil {
 		return err
@@ -140,43 +185,62 @@ func (s *DeploymentService) BuildImage(ctx context.Context, path, imageName stri
 	}
 	defer res.Body.Close()
 
-	// Consume output to wait for build to finish
-	// In a real app, we might want to stream this to the user
-	_, err = io.Copy(os.Stdout, res.Body)
-	return err
+	// Stream logs while looking for Docker build failures
+	scanner := bufio.NewScanner(res.Body)
+	var lastError string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// Map the JSON output
+		var payload struct {
+			Stream      string `json:"stream"`
+			ErrorDetail struct {
+				Message string `json:"message"`
+			} `json:"errorDetail"`
+			Error string `json:"error"`
+		}
+
+		if err := json.Unmarshal([]byte(line), &payload); err == nil {
+			if payload.Error != "" {
+				lastError = payload.Error
+			}
+			// Write the stream portion out if requested
+			if outStream != nil && payload.Stream != "" {
+				outStream.Write([]byte(payload.Stream))
+			} else if outStream != nil && payload.ErrorDetail.Message != "" {
+				outStream.Write([]byte("ERROR: " + payload.ErrorDetail.Message + "\n"))
+			}
+		} else {
+			// Raw line fallback
+			if outStream != nil {
+				outStream.Write([]byte(line + "\n"))
+			}
+		}
+	}
+
+	if lastError != "" {
+		return fmt.Errorf("Docker Build Failed: %s", lastError)
+	}
+
+	return nil
 }
 
 // RunContainer starts a container from the image
 func (s *DeploymentService) RunContainer(ctx context.Context, imageName string) (string, error) {
-	// Find a free port
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return "", err
+	// Inspect the image first to see what ports it wants to expose
+	if _, _, err := s.DockerClient.ImageInspectWithRaw(ctx, imageName); err != nil {
+		return "", fmt.Errorf("failed to inspect image: %v", err)
 	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
-
-	portStr := fmt.Sprintf("%d", port)
 
 	// Config
 	config := &container.Config{
 		Image: imageName,
-		ExposedPorts: nat.PortSet{
-			"80/tcp":   struct{}{},
-			"3000/tcp": struct{}{},
-			"5000/tcp": struct{}{},
-			"8080/tcp": struct{}{},
-		},
 	}
 
 	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"80/tcp":   []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: portStr}},
-			"3000/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: portStr}},
-			"5000/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: portStr}},
-			"8080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: portStr}},
-		},
-		AutoRemove: true, // For MVP, auto-remove on exit
+		PublishAllPorts: true,
+		AutoRemove:      false, // Disabled to allow log inspection of failed starts
 	}
 
 	resp, err := s.DockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
@@ -188,7 +252,43 @@ func (s *DeploymentService) RunContainer(ctx context.Context, imageName string) 
 		return "", err
 	}
 
-	return fmt.Sprintf("http://localhost:%d", port), nil
+	// Inspect the container to find the dynamically assigned port
+	inspect, err := s.DockerClient.ContainerInspect(ctx, resp.ID)
+	if err != nil {
+		return "", err
+	}
+
+	// Logic to find the "best" port: 
+	// 1. If 80 is exposed, use it.
+	// 2. If 3000 is exposed, use it.
+	// 3. Otherwise pick the first available.
+
+	var assignedPort string
+	priorityPorts := []string{"80/tcp", "3000/tcp", "8080/tcp", "5000/tcp"}
+	
+	// Search by priority
+	for _, p := range priorityPorts {
+		if bindings, ok := inspect.NetworkSettings.Ports[nat.Port(p)]; ok && len(bindings) > 0 {
+			assignedPort = bindings[0].HostPort
+			break
+		}
+	}
+
+	// Fallback to searching anything
+	if assignedPort == "" {
+		for _, bindings := range inspect.NetworkSettings.Ports {
+			if len(bindings) > 0 {
+				assignedPort = bindings[0].HostPort
+				break
+			}
+		}
+	}
+
+	if assignedPort == "" {
+		return "", fmt.Errorf("container started but no public port was allocated. Ports: %+v", inspect.NetworkSettings.Ports)
+	}
+
+	return fmt.Sprintf("http://localhost:%s", assignedPort), nil
 }
 
 // archiveDir creates a tar archive of a directory

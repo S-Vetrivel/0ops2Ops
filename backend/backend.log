@@ -1,1 +1,37 @@
-bash: ./backend_app: No such file or directory
+2026/04/22 01:00:59 MONGO_URI not defined, using fallback: mongodb://127.0.0.1:27017/O2O
+2026/04/22 01:00:59 ☑️  Connected to MongoDB
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] POST   /api/auth/signup          --> backend/internal/controllers.Signup (5 handlers)
+[GIN-debug] POST   /api/auth/login           --> backend/internal/controllers.Login (5 handlers)
+[GIN-debug] GET    /api/auth/logout          --> backend/internal/controllers.Logout (5 handlers)
+[GIN-debug] GET    /api/auth/me              --> backend/internal/controllers.Me (6 handlers)
+[GIN-debug] POST   /api/auth/reset-password  --> backend/internal/controllers.ResetPassword (5 handlers)
+[GIN-debug] GET    /api/auth/google          --> backend/internal/controllers.GoogleLogin (5 handlers)
+[GIN-debug] GET    /api/auth/google/callback --> backend/internal/controllers.GoogleCallback (5 handlers)
+[GIN-debug] POST   /api/auth/google/one-tap  --> backend/internal/controllers.GoogleOneTap (5 handlers)
+[GIN-debug] GET    /api/auth/github          --> backend/internal/controllers.GitHubLogin (5 handlers)
+[GIN-debug] GET    /api/auth/github/callback --> backend/internal/controllers.GitHubCallback (5 handlers)
+[GIN-debug] PUT    /api/profile/info         --> backend/internal/controllers.PersonalInfo (6 handlers)
+[GIN-debug] POST   /api/profile/profile-image --> backend/internal/controllers.UploadProfilePicture (6 handlers)
+[GIN-debug] GET    /api/repos                --> backend/internal/controllers.ListRepos (6 handlers)
+[GIN-debug] GET    /api/deploy               --> backend/internal/controllers.DeployRepo (6 handlers)
+[GIN-debug] GET    /api/services             --> backend/internal/controllers.ListServices (6 handlers)
+[GIN-debug] POST   /api/services/:id/:action --> backend/internal/controllers.ServiceAction (6 handlers)
+[GIN-debug] GET    /api/firewall             --> backend/internal/controllers.GetFirewallRules (6 handlers)
+[GIN-debug] POST   /api/firewall             --> backend/internal/controllers.MutateFirewall (6 handlers)
+[GIN-debug] GET    /api/logs                 --> backend/internal/controllers.GetLogs (6 handlers)
+[GIN-debug] POST   /api/chat                 --> backend/internal/controllers.HandleChat (6 handlers)
+2026/04/22 01:00:59 ☑️  Go server running on http://127.0.0.1:3000
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :3000
+[GIN] 2026/04/22 - 01:04:15 | 200 | 13.062186982s |             ::1 | GET      "/api/deploy?repoUrl=https%3A%2F%2Fgithub.com%2FDarkTechPirate%2FNS_3.0.git&repoName=NS_3.0"
+[GIN] 2026/04/22 - 01:08:10 | 200 |    1.534497ms |             ::1 | GET      "/api/logs"
+[GIN] 2026/04/22 - 01:08:10 | 200 |    3.118661ms |             ::1 | GET      "/api/services"

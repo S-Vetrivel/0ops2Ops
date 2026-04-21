@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { motion } from "framer-motion";
-import { GitBranch, Star, Eye, ExternalLink, Github } from "lucide-react";
+import api from "../../../services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { GitBranch, Star, Eye, ExternalLink, Github, Terminal, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+const API_BASE = `${import.meta.env.VITE_API_URL}/api`;
 
 export default function ReposTab({ theme }) {
   const [repos, setRepos] = useState([]);
@@ -21,9 +21,7 @@ export default function ReposTab({ theme }) {
   const fetchRepos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/repos`, {
-        withCredentials: true,
-      });
+      const res = await api.get("/repos");
       setRepos(res.data);
       setError(null);
     } catch (err) {
@@ -40,30 +38,52 @@ export default function ReposTab({ theme }) {
     }
   };
 
-  const handleDeploy = async (repo) => {
-    setDeployingRepoId(repo.id);
-    const toastId = toast.loading(`Deploying ${repo.name}... This may take a while.`);
+  const [streamLogs, setStreamLogs] = useState([]);
+  const [showTerminal, setShowTerminal] = useState(false);
+  const streamEndRef = React.useRef(null);
 
-    try {
-      const res = await axios.post(`${API_BASE}/deploy`, {
-        repoUrl: repo.clone_url,
-        repoName: repo.name
-      }, {
-        withCredentials: true
-      });
-
-      if (res.data.success) {
-        toast.success(`Successfully deployed ${repo.name}!`, { id: toastId });
-        setDeployedApps(prev => ({ ...prev, [repo.id]: res.data.appUrl }));
-      } else {
-        toast.error(`Deployment failed: ${res.data.error || "Unknown error"}`, { id: toastId });
-      }
-    } catch (err) {
-      console.error("Deployment error", err);
-      toast.error(`Deployment failed: ${err.response?.data?.error || err.message}`, { id: toastId });
-    } finally {
-      setDeployingRepoId(null);
+  useEffect(() => {
+    if (streamEndRef.current) {
+      streamEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
+  }, [streamLogs]);
+
+  const handleDeploy = (repo) => {
+    setDeployingRepoId(repo.id);
+    setStreamLogs([]);
+    setShowTerminal(true);
+
+    const eventSource = new EventSource(
+      `${API_BASE}/deploy?repoUrl=${encodeURIComponent(repo.clone_url)}&repoName=${encodeURIComponent(repo.name)}`,
+      { withCredentials: true } // Crucial for passing the authentication cookie if any
+    );
+
+    eventSource.addEventListener("log", (e) => {
+      setStreamLogs((prev) => [...prev, e.data]);
+    });
+
+    eventSource.addEventListener("success", (e) => {
+      toast.success(`Successfully deployed ${repo.name}!`);
+      setDeployedApps((prev) => ({ ...prev, [repo.id]: e.data }));
+      setStreamLogs((prev) => [...prev, "\n✨ Deployment Successful! => " + e.data]);
+      setDeployingRepoId(null);
+      eventSource.close();
+    });
+
+    eventSource.addEventListener("error", (e) => {
+      toast.error(`Deployment failed: ${e.data}`);
+      setStreamLogs((prev) => [...prev, "\n❌ Error: " + e.data]);
+      setDeployingRepoId(null);
+      eventSource.close();
+    });
+
+    eventSource.onerror = (err) => {
+      // EventSource closes and reconnects on error by default. Let's close it.
+      if (err.eventPhase === EventSource.CLOSED) {
+         setDeployingRepoId(null);
+         eventSource.close();
+      }
+    };
   };
 
   if (loading) {
@@ -207,6 +227,63 @@ export default function ReposTab({ theme }) {
           <p>No repositories found.</p>
         </div>
       )}
+
+      {/* TERMINAL MODAL FOR SSE */}
+      <AnimatePresence>
+        {showTerminal && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-3xl overflow-hidden rounded-xl shadow-2xl flex flex-col"
+              style={{ backgroundColor: "#1e1e1e", border: "1px solid #333" }}
+            >
+              {/* Terminal Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-[#252526] border-b border-[#333]">
+                <div className="flex items-center gap-3">
+                  <Terminal size={18} className="text-gray-400" />
+                  <span className="text-sm font-medium text-gray-200 font-mono">
+                    AI Auto-Deployment Stream {deployingRepoId ? <Loader2 size={14} className="inline animate-spin ml-2" /> : null}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowTerminal(false)}
+                  className="p-1 hover:bg-white/10 rounded-full transition-colors text-gray-400"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Terminal Logs */}
+              <div className="p-4 h-[400px] overflow-y-auto text-sm font-mono custom-scrollbar">
+                {streamLogs.length === 0 ? (
+                  <p className="text-gray-500 italic">Connecting to deployment engine...</p>
+                ) : (
+                  streamLogs.map((log, i) => (
+                    <div
+                      key={i}
+                      className={`break-words mb-1 ${
+                        log.includes("ERROR") || log.includes("Error:") || log.includes("Failed")
+                          ? "text-red-400"
+                          : log.includes("Success") || log.includes("🪄")
+                          ? "text-green-400"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      <span className="opacity-50 mr-2 text-xs">
+                        {new Date().toLocaleTimeString()}
+                      </span>
+                      {log}
+                    </div>
+                  ))
+                )}
+                <div ref={streamEndRef} />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "@/context/ThemeContext";
 import { useApp } from "../context/Appcontext";
@@ -15,8 +15,10 @@ import ProfileSidebar from "../components/profile/ProfileSidebar";
 import PersonalInfoTab from "../components/profile/tabs/PersonalInfoTab";
 import OrdersTab from "../components/profile/tabs/OrdersTab";
 import WishlistTab from "../components/profile/tabs/WishlistTab";
-import AddressesTab from "../components/profile/tabs/AddressesTab";
 import ReposTab from "../components/profile/tabs/ReposTab";
+import { useLocation } from "react-router-dom";
+import FirewallTab from "../components/profile/tabs/FirewallTab";
+import AIChat from "../components/chat/AIChat";
 
 // Import Constants
 import { PROFILE_TABS } from "../components/profile/constants";
@@ -25,14 +27,28 @@ import { PROFILE_TABS } from "../components/profile/constants";
 const TAB_COMPONENTS = {
   personal: PersonalInfoTab,
   repos: ReposTab,
+  firewall: FirewallTab,
 };
 
 export default function Profile() {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
   const { setUser, user } = useApp();
+  const location = useLocation();
 
-  const [activeTabId, setActiveTabId] = useState("personal");
+  const getInitialTab = () => {
+    if (location.pathname.startsWith("/services")) return "repos";
+    if (location.pathname.startsWith("/settings")) return "personal";
+    if (location.pathname.startsWith("/firewall")) return "firewall";
+    return "personal";
+  };
+
+  const [activeTabId, setActiveTabId] = useState(getInitialTab());
+  
+  useEffect(() => {
+    setActiveTabId(getInitialTab());
+  }, [location.pathname]);
+
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -112,7 +128,13 @@ export default function Profile() {
             <ProfileSidebar
               tabs={PROFILE_TABS}
               activeTabId={activeTabId}
-              onTabChange={setActiveTabId}
+              onTabChange={(id) => {
+                setActiveTabId(id);
+                // Also update the URL
+                if (id === "repos") navigate("/services");
+                if (id === "personal") navigate("/settings");
+                if (id === "firewall") navigate("/firewall");
+              }}
               theme={theme}
               isAdmin={user?.role === "admin"}
             />
@@ -139,6 +161,9 @@ export default function Profile() {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* --- AI CHATBOT --- */}
+        <AIChat theme={theme} />
 
         {/* --- LOGOUT MODAL --- */}
         <Modal

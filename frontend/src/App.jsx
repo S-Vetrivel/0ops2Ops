@@ -72,7 +72,19 @@ function App() {
           {/* SIMPLE GUARD: If not logged in → go to login */}
           <Route
             path="/profile"
-            element={user ? <Profile /> : <Navigate to="/" replace />}
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/services"
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/settings"
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/firewall"
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
           />
 
           <Route path="*" element={<NotFound />} />

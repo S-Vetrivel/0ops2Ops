@@ -8,6 +8,9 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
+	// 1. Install global IDS Traffic Logger
+	r.Use(middleware.TrafficLogger())
+
 	api := r.Group("/api")
 	{
 		// Auth Routes
@@ -28,13 +31,6 @@ func SetupRoutes(r *gin.Engine) {
 			auth.GET("/github/callback", controllers.GitHubCallback)
 		}
 
-		// Profile RoutesMatches /api/profile
-		// profile := api.Group("/profile") // Profile routes are now part of the protected group
-		// {
-		// 	profile.PUT("/info", middleware.Protect(), controllers.PersonalInfo) // Moved to protected group
-		// 	profile.POST("/profile-image", middleware.Protect(), controllers.UploadProfilePicture) // Moved to protected group
-		// }
-
 		protected := api.Group("") // This group will inherit the /api prefix
 		protected.Use(middleware.Protect())
 		{
@@ -42,7 +38,16 @@ func SetupRoutes(r *gin.Engine) {
 			protected.PUT("/profile/info", controllers.PersonalInfo)
 			protected.POST("/profile/profile-image", controllers.UploadProfilePicture)
 			protected.GET("/repos", controllers.ListRepos)
-			protected.POST("/deploy", controllers.DeployRepo)
+			protected.GET("/deploy", controllers.DeployRepo)
+			protected.GET("/services", controllers.ListServices)
+			protected.POST("/services/:id/:action", controllers.ServiceAction)
+			protected.GET("/firewall", controllers.GetFirewallRules)
+			protected.POST("/firewall", controllers.MutateFirewall)
+			// Admin/Dashboard Logs
+			protected.GET("/logs", controllers.GetLogs)
+
+			// AI Chat route
+			protected.POST("/chat", controllers.HandleChat)
 		}
 	}
 }

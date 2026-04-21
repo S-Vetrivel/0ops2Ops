@@ -5,6 +5,7 @@ import (
 	"backend/internal/models"
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -57,11 +58,27 @@ func Protect() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		err = config.DB.Collection("users").FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "User not found"})
-			c.Abort()
-			return
+		if config.IsDBConnected {
+			err = config.DB.Collection("users").FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"message": "User not found"})
+				c.Abort()
+				return
+			}
+		} else {
+			// Demo Mode: Check cache
+			var exists bool
+			user, exists = config.GetUserFromCache(userIDStr)
+			if !exists {
+				log.Println("⚠️  User not found in cache, using generic demo fallback")
+				user = models.User{
+					ID:       objID,
+					Fullname: "Demo User",
+					Username: "demo",
+					Email:    "demo@example.com",
+					Role:     "user",
+				}
+			}
 		}
 
 		c.Set("user", user)

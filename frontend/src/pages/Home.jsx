@@ -15,11 +15,13 @@ import {
   Server,
   AlertCircle,
   Play,
-  Square
+  Square,
+  Trash
 } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import LogsWidget from "../components/dashboard/LogsWidget";
 
 const StatusBadge = ({ state }) => {
   let colors = "";
@@ -102,12 +104,13 @@ export default function Home() {
           <p className="text-sm opacity-60">Real-time overview of your local Docker containers.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Link
+            to="/services"
             className="px-4 py-2 text-sm font-medium bg-black dark:bg-white text-white dark:text-black rounded-md hover:opacity-90 transition-opacity flex items-center gap-2"
           >
             <Plus size={16} />
             New Deployment
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -145,80 +148,88 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Services List */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-semibold opacity-50 uppercase tracking-wider">Active Containers</h2>
+      {/* Main Grid: Services List & Logs Stream */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Col: Services List */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold opacity-50 uppercase tracking-wider">Active Containers</h2>
 
-        <div className="grid gap-3">
-          {filteredServices.map((service) => {
-            const name = service.Names?.[0].replace("/", "") || service.Id.substring(0, 12);
-            const isRunning = service.State === "running";
+          <div className="flex flex-col gap-3 h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {filteredServices.map((service) => {
+              const name = service.Names?.[0].replace("/", "") || service.Id.substring(0, 12);
+              const isRunning = service.State === "running";
 
-            return (
-              <motion.div
-                key={service.Id}
-                layout
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ borderColor: theme.navbar.border, backgroundColor: theme.card.bg }}
-                className="group border rounded-xl p-4 md:p-5 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2.5 rounded-lg border bg-zinc-50 dark:bg-zinc-900/50" style={{ borderColor: theme.navbar.border }}>
-                      <Box size={20} className="opacity-70" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-base flex items-center gap-2" title={service.Image}>
-                          {name}
-                          <span className="text-xs font-normal opacity-50 p-1 bg-zinc-100 dark:bg-zinc-800 rounded">
-                            {service.Image.split(":")[0]}
+              return (
+                <motion.div
+                  key={service.Id}
+                  layout
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{ borderColor: theme.navbar.border, backgroundColor: theme.card.bg }}
+                  className="group border rounded-xl p-4 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2.5 rounded-lg border bg-zinc-50 dark:bg-zinc-900/50" style={{ borderColor: theme.navbar.border }}>
+                        <Box size={20} className="opacity-70" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-base flex items-center gap-2" title={service.Image}>
+                            {name}
+                            <span className="text-xs font-normal opacity-50 p-1 bg-zinc-100 dark:bg-zinc-800 rounded">
+                              {service.Image.split(":")[0]}
+                            </span>
+                          </h3>
+                          <StatusBadge state={service.State} />
+                        </div>
+                        <div className="flex items-center gap-4 text-xs opacity-60 mt-1.5 font-medium">
+                          <span className="flex items-center gap-1">
+                            ID: {service.Id.substring(0, 8)}
                           </span>
-                        </h3>
-                        <StatusBadge state={service.State} />
-                      </div>
-                      <div className="flex items-center gap-4 text-xs opacity-60 mt-1.5 font-medium">
-                        <span className="flex items-center gap-1">
-                          ID: {service.Id.substring(0, 8)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {service.Status}
-                        </span>
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {service.Status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    {isRunning ? (
-                      <button
-                        onClick={() => handleAction(service.Id, "stop")}
-                        className="p-2 hover:bg-red-50 text-red-600 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Stop">
-                        <Square size={16} fill="currentColor" />
+                    <div className="flex items-center gap-2">
+                      {isRunning ? (
+                        <button
+                          onClick={() => handleAction(service.Id, "stop")}
+                          className="p-2 hover:bg-red-50 text-red-600 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Stop">
+                          <Square size={16} fill="currentColor" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAction(service.Id, "start")}
+                          className="p-2 hover:bg-emerald-50 text-emerald-600 dark:hover:bg-emerald-900/20 rounded-md transition-colors" title="Start">
+                          <Play size={16} fill="currentColor" />
+                        </button>
+                      )}
+
+                      <button onClick={() => handleAction(service.Id, "remove")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors text-red-500 hover:text-red-600" title="Remove Container">
+                        <Trash size={18} />
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => handleAction(service.Id, "start")}
-                        className="p-2 hover:bg-emerald-50 text-emerald-600 dark:hover:bg-emerald-900/20 rounded-md transition-colors" title="Start">
-                        <Play size={16} fill="currentColor" />
-                      </button>
-                    )}
-
-                    <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors text-zinc-500">
-                      <MoreHorizontal size={18} />
-                    </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )
-          })}
+                </motion.div>
+              )
+            })}
 
-          {filteredServices.length === 0 && !loading && (
-            <div className="text-center py-12 border border-dashed rounded-xl" style={{ borderColor: theme.navbar.border }}>
-              <p className="opacity-50">No containers found.</p>
-            </div>
-          )}
+            {filteredServices.length === 0 && !loading && (
+              <div className="text-center py-12 border border-dashed rounded-xl" style={{ borderColor: theme.navbar.border }}>
+                <p className="opacity-50">No containers found.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Col: Logs Stream Widget */}
+        <div className="flex flex-col h-full rounded-xl border p-4 bg-zinc-50/50 dark:bg-zinc-900/20" style={{ borderColor: theme.navbar.border }}>
+           <LogsWidget theme={theme} />
         </div>
       </div>
     </div>

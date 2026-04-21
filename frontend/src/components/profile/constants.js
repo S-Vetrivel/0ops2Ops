@@ -1,5 +1,5 @@
 // src/components/profile/constants.js
-import { User, Package, MapPin, Heart, GalleryHorizontal } from "lucide-react";
+import { User, Package, MapPin, Heart, GalleryHorizontal, Shield } from "lucide-react";
 import { FiBox } from "react-icons/fi";
 
 // --- TAB CONFIGURATION ---
@@ -17,6 +17,13 @@ export const PROFILE_TABS = [
     id: "repos",
     label: "Repositories",
     icon: GalleryHorizontal,
+    showForUser: true,
+    showForAdmin: true,
+  },
+  {
+    id: "firewall",
+    label: "Firewall",
+    icon: Shield,
     showForUser: true,
     showForAdmin: true,
   },

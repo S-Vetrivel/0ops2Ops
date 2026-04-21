@@ -11,13 +11,14 @@ import (
 )
 
 var DB *mongo.Database
+// IsDBConnected is defined in cache.go
 
 func ConnectMongo() {
-	uri := os.Getenv("MONGO_DB")
+	uri := os.Getenv("MONGO_URI")
 	if uri == "" {
 		// Fallback to local default if not set, similar to legacy code
-		uri = "mongodb://127.0.0.1:27017/sass"
-		log.Println("MONGO_DB not defined, using fallback:", uri)
+		uri = "mongodb://127.0.0.1:27017/O2O"
+		log.Println("MONGO_URI not defined, using fallback:", uri)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -25,15 +26,11 @@ func ConnectMongo() {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal("Error connecting to MongoDB: ", err)
-	}
-
-	// Verify connection
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal("Could not ping MongoDB: ", err)
+		log.Println("⚠️  Error connecting to MongoDB: ", err)
+		return
 	}
 
 	log.Println("☑️  Connected to MongoDB")
-	DB = client.Database("test") // Defaulting to "test" as per Mongoose default, or check if URI has db name
+	DB = client.Database("O2O")
+	IsDBConnected = true
 }

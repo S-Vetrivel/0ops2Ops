@@ -58,15 +58,23 @@ func Signup(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Check duplicate email
-	count, err := config.DB.Collection("users").CountDocuments(ctx, bson.M{"email": body.Email})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
-	}
-	if count > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "User already exists"})
-		return
+	if config.IsDBConnected {
+		// Check duplicate email
+		count, err := config.DB.Collection("users").CountDocuments(ctx, bson.M{"email": body.Email})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+		if count > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "User already exists"})
+			return
+		}
+	} else {
+		// Demo Mode: Check cache for duplicate
+		if _, exists := config.GetUserByEmailFromCache(body.Email); exists {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "User already exists (Demo Cache)"})
+			return
+		}
 	}
 
 	hashedPassword, err := utils.HashPassword(body.Password)
@@ -87,10 +95,15 @@ func Signup(c *gin.Context) {
 		Role:      "user",
 	}
 
-	_, err = config.DB.Collection("users").InsertOne(ctx, newUser)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+	if config.IsDBConnected {
+		_, err = config.DB.Collection("users").InsertOne(ctx, newUser)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+	} else {
+		// Demo Mode: Save to cache
+		config.RegisterUserInCache(newUser.ID.Hex(), newUser)
 	}
 
 	utils.GenerateTokenAndSetCookie(c, newUser.ID)
@@ -126,10 +139,20 @@ func Login(c *gin.Context) {
 	defer cancel()
 
 	var user models.User
-	err := config.DB.Collection("users").FindOne(ctx, bson.M{"email": body.Email}).Decode(&user)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
-		return
+	if config.IsDBConnected {
+		err := config.DB.Collection("users").FindOne(ctx, bson.M{"email": body.Email}).Decode(&user)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+			return
+		}
+	} else {
+		// Demo Mode: Check cache
+		var exists bool
+		user, exists = config.GetUserByEmailFromCache(body.Email)
+		if !exists {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found in Demo Cache"})
+			return
+		}
 	}
 
 	if !utils.CheckPasswordHash(body.Password, user.Password) {
